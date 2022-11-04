@@ -1,28 +1,23 @@
 import mysql.connector
-
+import rsa
+user_private_key = ""
 user_online = ""
 user_id = ""
 user_name = ""
 id_du_mec = ""
-
-
+key_publique_du_mec = ""
 def inscription():
     print("Votre pseudo")
     pseudo = input()
     print("Votre mot de passe")
     mdp = input()
-    conn = mysql.connector.connect(user='c9AB91ZTWs', password='RbvnvmTKqv',
-                                   host='remotemysql.com',  port="3306", database='c9AB91ZTWs')
-    # Creating a cursor object using the cursor() method
+    key = (rsa.gen_rsa_keypair(128))
+    public_key = (key[0][0], key[0][1])
     cursor = conn.cursor()
-    # Executing the SQL command
     cursor.execute("INSERT INTO `Users` VALUES (%s, %s,%s, %s,%s)",
-                   (None, str(pseudo), str(mdp), "None", "None"))
-    # Commit your changes in the database
+                   (None, str(pseudo), str(mdp), str(key), str(public_key)))
     conn.commit()
-    # Rolling back in case of error
     conn.rollback()
-    # Closing the connection
     conn.close()
 
 
@@ -33,42 +28,35 @@ def connexion():
     password = input()
     conn = mysql.connector.connect(user='c9AB91ZTWs', password='RbvnvmTKqv',
                                    host='remotemysql.com',  port="3306", database='c9AB91ZTWs')
-    # Creating a cursor object using the cursor() method
     cursor = conn.cursor()
-    # Executing the SQL command
     cursor.execute("SELECT * FROM `Users`")
     data = cursor.fetchall()
     for name in data:
         if name[1] == utilisateur:
             if name[2] == password:
-                global user_online, user_name, user_id
-                user_online = True
+                global user_online, user_name, user_id, user_private_key
+                user_online = str(name[3])
                 user_name = name[1]
                 user_id = str(name[0])
+                user_private_key = str(name[3])
+                print(user_private_key)
                 conn.commit()
-                # Rolling back in case of error
                 conn.rollback()
-                # Closing the connection
                 conn.close()
-                print("Bonjour " + str(user_name) +
-                      " vous avez réussi votre connexion")
+                print("Bonjour [" +str(user_name)+"] vous avez réussi votre connexion")
                 return True
 
 
 def choix_user():
-    print("A qui envoyer un message ? (choissisez le chiffre apres le nom pour selectionner)")
+    print("Taper l'id de votre amis")
     conn = mysql.connector.connect(user='c9AB91ZTWs', password='RbvnvmTKqv',
                                    host='remotemysql.com',  port="3306", database='c9AB91ZTWs')
-    # Creating a cursor object using the cursor() method
     cursor = conn.cursor()
-    # Executing the SQL command
     cursor.execute("SELECT * FROM `Users`")
     data = cursor.fetchall()
     for name in data:
         print(str(name[1])+" id ("+str(name[0])+")")
-        # Rolling back in case of error
     conn.rollback()
-    # Closing the connection
     conn.close()
     selection = input()
     conn = mysql.connector.connect(user='c9AB91ZTWs', password='RbvnvmTKqv',
@@ -82,8 +70,9 @@ def choix_user():
     for name in data:
         if str(name[0]) == str(selection):
             print("Vous avez choisis l'utilisateur prénommé "+str(name[1]))
-            global id_du_mec
+            global id_du_mec, key_publique_du_mec
             id_du_mec = name[0]
+            key_publique_du_mec = name[4]
             # Rolling back in case of error
             conn.rollback()
             # Closing the connection
@@ -98,39 +87,47 @@ def state_conversation():
     print("Discuter avec quelqu'un d'autre ? 3")
     choix = input()
     if choix == '1':
-            conn = mysql.connector.connect(user='c9AB91ZTWs', password='RbvnvmTKqv',
-                                           host='remotemysql.com',  port="3306", database='c9AB91ZTWs')
-            # Creating a cursor object using the cursor() method
-            cursor = conn.cursor()
-            # Executing the SQL command
-            cursor.execute("SELECT `message` FROM `Conversations` WHERE `id_emmeteur` = (%s) AND `id_recepteur` = (%s) OR `id_emmeteur` = (%s) AND `id_recepteur` = (%s) ", (
-                user_id, id_du_mec, id_du_mec, user_id))
-            data = cursor.fetchall()
-            for i in data:
-                print(i)
-            # Commit your changes in the database
-            conn.commit()
-            # Rolling back in case of error
-            conn.rollback()
-            # Closing the connection
-            conn.close()
+        conn = mysql.connector.connect(user='c9AB91ZTWs', password='RbvnvmTKqv',
+                                       host='remotemysql.com',  port="3306", database='c9AB91ZTWs')
+        # Creating a cursor object using the cursor() method
+        cursor = conn.cursor()
+        # Executing the SQL command
+        cursor.execute("SELECT * FROM `Conversations`")
+        data = cursor.fetchall()
+        for message in data:
+            if str(message[1]) == user_id and str(message[1]) == id_du_mec or str(message[2]) == user_id or str(message[1]) == id_du_mec:
+                msg_chiffrer = eval(message[3])
+                print(msg_chiffrer)
+                user_private_key = eval(user_online)
+                dec = rsa.rsa_dec(msg_chiffrer, user_private_key)
+                print(dec)
+        # Commit your changes in the database
+        conn.commit()
+        # Rolling back in case of error
+        conn.rollback()
+        # Closing the connection
+        conn.close()
     elif choix == '2':
+        msg = input(str(user_name)+": ")
+        while(len(msg) > 17):
+            print("Pour une raison de sécurité, nous avons décider de limiter à au max 16 charactere")
             msg = input(str(user_name)+": ")
-            conn = mysql.connector.connect(user='c9AB91ZTWs', password='RbvnvmTKqv',
-                                           host='remotemysql.com',  port="3306", database='c9AB91ZTWs')
-            # Creating a cursor object using the cursor() method
-            cursor = conn.cursor()
-            # Executing the SQL command
-            cursor.execute("INSERT INTO `Conversations` VALUES (%s, %s,%s,%s)",
-                           (None, user_id, id_du_mec, str(msg)))
-            # Commit your changes in the database
-            conn.commit()
-            # Rolling back in case of error
-            conn.rollback()
-            # Closing the connection
-            conn.close()
+        enc = rsa.rsa_enc(msg, eval(key_publique_du_mec))
+        conn = mysql.connector.connect(user='c9AB91ZTWs', password='RbvnvmTKqv',
+                                       host='remotemysql.com',  port="3306", database='c9AB91ZTWs')
+        # Creating a cursor object using the cursor() method
+        cursor = conn.cursor()
+        # Executing the SQL command
+        cursor.execute("INSERT INTO `Conversations` VALUES (%s, %s,%s,%s)",
+                       (None, user_id, id_du_mec, str(enc)))
+        # Commit your changes in the database
+        conn.commit()
+        # Rolling back in case of error
+        conn.rollback()
+        # Closing the connection
+        conn.close()
     elif choix == '3':
-            return False
+        return False
 
 
 while (True):
@@ -146,4 +143,3 @@ while (True):
                     while (True):
                         if state_conversation() == False:
                             break
-                        
