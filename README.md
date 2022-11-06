@@ -11,13 +11,13 @@
 - Utiliser le RSA pour le chiffrement et le déchifrement des méssages
 - Utiliser une base de donnée
 
+# Exemple de l'utilisation du programme
+- Prérequis : avoir le module mysql-connector
+
 ![img](/image/main.PNG)
 ![img2](/image/main1.PNG)
 
-# Exemple de l'utilisation du programme
-- Prérequis : avoir le module mysql-connector
-![img3](/image/base1.png)
-![img3](/image/base2.png)
 # Exemple de l'utilisation d'une base de données 
 
-![TaquinMelangé](/uploads/ea7a3dfa21b648fc20c668943d823cfb/TaquinMelangé.png)
+![img3](/image/base1.png)
+![img3](/image/base2.png)
