@@ -14,10 +14,10 @@
 # Exemple de l'utilisation du programme
 - Prérequis : avoir le module mysql-connector
 
-![img](/image/main.PNG)
-![img2](/image/main1.PNG)
+![img](image/main.PNG)
+![img2](image/main1.PNG)
 
 # Exemple de l'utilisation d'une base de données 
 
-![img3](/image/base1.png)
-![img3](/image/base2.png)
+![img3](image/base1.png)
+![img3](image/base2.png)
